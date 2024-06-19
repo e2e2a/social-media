@@ -14,7 +14,7 @@ const Header = ({ label }: HeaderProps) => {
           fontPoppins.className
         )}
       >
-        GMedia
+        Wise
       </h1>
       <p className='text-muted-foreground text-sm'>{label}</p>
     </div>

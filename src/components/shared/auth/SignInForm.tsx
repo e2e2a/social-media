@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useTransition } from 'react';
-import CardWrapper from './CardWrapper';
-import { useForm } from 'react-hook-form';
+import CardWrapper from '../CardWrapper';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SigninValidator } from '@/lib/validators/Validator';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,14 +18,20 @@ import { Button } from '@/components/ui/button';
 import { FormError } from '../FormError';
 import { FormSuccess } from '../FormSuccess';
 import { SignInAction } from '@/actions/auth.actions';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 const SignInForm = () => {
-  const searchParams = useSearchParams()
-  const urlError = searchParams.get('error') === "OAuthAccountNotLinked" ? "Email Error provider" : ""
+  const searchParams = useSearchParams();
+  const urlError =
+    searchParams.get('error') === 'OAuthAccountNotLinked'
+      ? 'Email Error provider'
+      : '';
   const [error, setError] = useState<string | undefined>('');
   // const [success, setSuccess] = useState<string | undefined>('');
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+
+  const router = useRouter();
   const form = useForm<z.infer<typeof SigninValidator>>({
     resolver: zodResolver(SigninValidator),
     // this default valueis for input errors message
@@ -34,14 +40,34 @@ const SignInForm = () => {
       password: '',
     },
   });
-  const onSubmit = (data: z.infer<typeof SigninValidator>) => {
-
-    startTransition(() => {
-      SignInAction(data).then((res) => {
-        setError(res?.error);
-        // setSuccess(res?.success)
+  const onSubmit: SubmitHandler<z.infer<typeof SigninValidator>> = async (data) => {
+    try {
+      setIsPending(true);
+      const response = await fetch('/api/auth/sign-in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-    });
+
+      const res = await response.json();
+
+      if (!response.ok) {
+        setError(res.error || 'An error occurred');
+      }
+      router.push('/settings');
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsPending(false);
+    }
+    // startTransition(() => {
+    //   SignInAction(data).then((res) => {
+    //     setError(res?.error);
+    //     // setSuccess(res?.success)
+    //   });
+    // });
   };
   return (
     <CardWrapper
@@ -97,7 +123,20 @@ const SignInForm = () => {
               )}
             />
           </div>
-          <Button type='submit' className='w-full bg-blue-600 hover:bg-blue-700 text-white'>
+          <Button
+            variant='link'
+            className='font-normal w-full text-indigo-500 text-center flex justify-end items-center'
+            size='sm'
+          >
+            <Link href={'/forgot-password'} className=''>
+              Forgot Password?
+            </Link>
+          </Button>
+          <Button
+            type='submit'
+            disabled={isPending}
+            className='w-full bg-blue-600 hover:bg-blue-700 text-white'
+          >
             Sign In
           </Button>
         </form>

@@ -1,3 +1,4 @@
+"use server"
 import { getVerificationTokenByEmail } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
 import db from '../db';

@@ -1,3 +1,4 @@
+"use server"
 import { Resend } from 'resend';
 import { verificationTemplate } from './emailTemplate/verificationTemplate';
 
@@ -16,4 +17,5 @@ export const sendVerificationEmail = async (
     subject: resendHeader,
     html: htmlContent,
   });
+  return
 };

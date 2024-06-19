@@ -1,3 +1,4 @@
+"use server"
 export async function verificationTemplate(vericationCode: string, firstname: string) {
   return `<!doctype html>
   <html lang="en">

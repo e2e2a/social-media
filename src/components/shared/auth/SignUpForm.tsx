@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useTransition } from 'react';
-import CardWrapper from './CardWrapper';
-import { useForm } from 'react-hook-form';
+import CardWrapper from '../CardWrapper';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -17,13 +17,12 @@ import { Button } from '@/components/ui/button';
 import { FormError } from '../FormError';
 import { FormSuccess } from '../FormSuccess';
 import { SignupValidator } from '@/lib/validators/Validator';
-import { SignUpAction } from '@/actions/auth.actions';
 import { useRouter } from 'next/navigation';
 
 const SignUpForm = () => {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const router = useRouter();
 
@@ -34,19 +33,43 @@ const SignUpForm = () => {
       email: '',
       firstname: '',
       lastname: '',
+      username: '',
       password: '',
       CPassword: '',
     },
   });
-  const onSubmit = (data: z.infer<typeof SignupValidator>) => {
-    startTransition(async () => {
-      await SignUpAction(data).then((res) => {
-        if (res.error) return setError(res.error);
-
-        setSuccess(res.success);
-        router.push(`/verification?token=${res.token}`);
+  const onSubmit = async (data: z.infer<typeof SignupValidator>) => {
+    try {
+      setIsPending(true);
+      const response = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-    });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+    
+      const res = await response.json();
+      setSuccess(res.success)
+      router.push(`/verification?token=${res.token}`)
+    } catch (error: any) {
+      console.log(error);
+    } finally {
+      setIsPending(false);
+    }
+
+    // startTransition(async () => {
+    //   await SignUpAction(data).then((res) => {
+    //     if (res.error) return setError(res.error);
+
+    //     setSuccess(res.success);
+    //     router.push(`/verification?token=${res.token}`);
+    //   });
+    // });
   };
   return (
     <CardWrapper
@@ -120,6 +143,24 @@ const SignUpForm = () => {
             />
             <FormField
               control={form.control}
+              name='username'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      placeholder='Enter Lastname'
+                      className='bg-gray-50'
+                    />
+                  </FormControl>
+                  <FormMessage className='text-red' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name='password'
               render={({ field }) => (
                 <FormItem>
@@ -159,6 +200,7 @@ const SignUpForm = () => {
           </div>
           <Button
             type='submit'
+            disabled={isPending}
             className='w-full bg-blue-600 hover:bg-blue-700 text-white'
           >
             Sign Up

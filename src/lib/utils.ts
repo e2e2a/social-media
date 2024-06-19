@@ -56,3 +56,16 @@ export const multiFormatDateString = (timestamp: string = ""): string => {
       return "Just now";
   }
 };
+
+export const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+};
+
+export const calculateRemainingTime = (expirationTime: any) => {
+  if (!expirationTime) return 0;
+  const now = new Date();
+  const diff = expirationTime.getTime() - now.getTime();
+  return Math.max(0, Math.floor(diff / 1000)); // return time in seconds
+};

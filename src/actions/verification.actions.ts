@@ -38,7 +38,6 @@ export const VerificationTokenSignUp = async (token: string) => {
     if (!existingUser) {
       return { error: 'User not found' };
     }
-    console.log('existingToken', existingToken);
     return { existingToken: existingToken };
   } catch (error: any) {
     console.error('Error verifying email verification token:', error);
@@ -97,3 +96,7 @@ export const resendVerificationCode = async (email: string) => {
   );
   return verification;
 };
+
+export const mytestingActionQuery = () => {
+  console.log('hello world')
+}
