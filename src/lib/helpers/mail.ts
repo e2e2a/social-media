@@ -10,7 +10,7 @@ export const sendVerificationEmail = async (
   firstname: string,
   resendHeader: string
 ) => {
-  const htmlContent = await verificationTemplate(verificationCode, firstname);
+  const htmlContent = await verificationTemplate(verificationCode, firstname,resendHeader);
   await resend.emails.send({
     from: 'onboarding@resend.dev',
     to: email,

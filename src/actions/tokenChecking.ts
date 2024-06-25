@@ -1,5 +1,4 @@
 'use server';
-import { signIn } from '@/auth';
 import db from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/helpers/mail';
 import { generateVerificationCode } from '@/lib/helpers/tokens';
@@ -11,7 +10,7 @@ import {
 } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
 
-export const VerificationTokenSignUp = async (token: string) => {
+export const VerificationTokenSignUp = async (token: string, Ttype?: string | null) => {
   try {
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!, {
       algorithms: ['HS256'],
@@ -22,9 +21,20 @@ export const VerificationTokenSignUp = async (token: string) => {
     }
 
     const existingToken = await getVerificationTokenByEmail(decodedToken.email);
-
     if (!existingToken) {
       return { error: 'Token not found' };
+    }
+
+    const existingUser = await getUserByEmail(existingToken.email);
+    switch (Ttype) {
+      case 'reset-password':
+        if (!existingUser || !existingUser.emailVerified) {
+          console.log('hello')
+          return { errorRecovery: 'User email is not verified. Redirecting to recovery page...' };
+        }
+        break;
+      default:
+        break;
     }
 
     const hasExpired = new Date(existingToken.expires) < new Date();
@@ -33,16 +43,13 @@ export const VerificationTokenSignUp = async (token: string) => {
       return { error: 'Token has expired' };
     }
 
-    const existingUser = await getUserByEmail(existingToken.email);
-
     if (!existingUser) {
       return { error: 'User not found' };
     }
     return { existingToken: existingToken };
   } catch (error: any) {
-    console.error('Error verifying email verification token:', error);
     return {
-      error: `Token expired!`,
+      error: `Undefined Token or Token is Expired.`,
     };
   }
 };

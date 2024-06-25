@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!existingUser.emailVerified) {
-      return NextResponse.json({ error: 'Email not verified!' }, { status: 403 });
+      return NextResponse.json({ error: 'Email not found.' }, { status: 403 });
     }
 
     try {

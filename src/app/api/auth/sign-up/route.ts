@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       if (existingUser.emailVerified) {
         return NextResponse.json(
           { error: 'User already exist. Please sign in to continue.' },
-          { status: 201 }
+          { status: 409 }
         );
       }
       await updateUser(email, firstname, lastname, username, password);

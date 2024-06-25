@@ -1,5 +1,20 @@
-"use server"
-export async function verificationTemplate(vericationCode: string, firstname: string) {
+'use server';
+export async function verificationTemplate(vericationCode: string, firstname: string, resendHeader: string) {
+  let content;
+  let titleLabel;
+  switch (resendHeader) {
+    case 'Confirm your Email':
+    case 'Resend Verification':
+      titleLabel = 'Verification Code';
+      content =
+        'Thank you for joining My Media! To complete your registration, please verify your email address by entering the following verification code:';
+      break;
+    case 'Recovery Activation':
+      titleLabel = 'Reset-Password Activation';
+      content =
+        'We received a request to reset your password for your Media account. If you did not request a password reset, please ignore this email. Otherwise, please enter the following verification code to reset your password:';
+      break;
+  }
   return `<!doctype html>
   <html lang="en">
     <head>
@@ -101,7 +116,7 @@ export async function verificationTemplate(vericationCode: string, firstname: st
                 <tr> 
                   <td class="wrapper" style="font-family: Helvetica, sans-serif; text-align: center; font-size: 16px; vertical-align: top; box-sizing: border-box; padding: 25px;" valign="top">
                       <p style="font-family: Helvetica, sans-serif; font-size: 32px; font-weight: 600; margin: 0;">
-                        Verification Code
+                        ${titleLabel}
                       </p>
                   </td>
                 </tr>
@@ -109,7 +124,7 @@ export async function verificationTemplate(vericationCode: string, firstname: st
                   <td class="wrapper" style="font-family: Helvetica, sans-serif; font-size: 16px; vertical-align: top; box-sizing: border-box; padding: 24px;" valign="top">
                     <p style="font-family: Helvetica, sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 16px;">Hi there ${firstname},</p>
                     <p style="font-family: Helvetica, sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 16px;">
-                      Thank you for joining My Media! To complete your registration, please verify your email address by entering the following verification code:
+                      ${content}
                     </p>
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn " style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; box-sizing: border-box; width: 100%; min-width: 100%;" width="100%">
                       <tbody>

@@ -1,40 +1,29 @@
 'use client';
-import React, { useState, useTransition } from 'react';
+import React, { useState } from 'react';
 import CardWrapper from '../CardWrapper';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SigninValidator } from '@/lib/validators/Validator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FormError } from '../FormError';
-import { FormSuccess } from '../FormSuccess';
-import { SignInAction } from '@/actions/auth.actions';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSignInMutation } from '@/lib/queries';
+import { FormMessageDisplay } from '../FormMessageDisplay';
 
 const SignInForm = () => {
   const searchParams = useSearchParams();
-  const urlError =
-    searchParams.get('error') === 'OAuthAccountNotLinked'
-      ? 'Email Error provider'
-      : '';
-  const [error, setError] = useState<string | undefined>('');
-  // const [success, setSuccess] = useState<string | undefined>('');
+  const urlError = searchParams.get('error') === 'OAuthAccountNotLinked' ? 'Email Error provider' : '';
+  const [message, setMessage] = useState<string | undefined>('');
+  const [typeMessage, setTypeMessage] = useState('');
   const [isPending, setIsPending] = useState(false);
+  const mutation = useSignInMutation();
 
   const router = useRouter();
   const form = useForm<z.infer<typeof SigninValidator>>({
     resolver: zodResolver(SigninValidator),
-    // this default valueis for input errors message
     defaultValues: {
       email: '',
       password: '',
@@ -43,21 +32,21 @@ const SignInForm = () => {
   const onSubmit: SubmitHandler<z.infer<typeof SigninValidator>> = async (data) => {
     try {
       setIsPending(true);
-      const response = await fetch('/api/auth/sign-in', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      mutation.mutate(data, {
+        onSuccess: (res) => {
+          console.log(res);
+          router.push('/');
         },
-        body: JSON.stringify(data),
+        onError: (error) => {
+          setMessage(error.message);
+          setTypeMessage('error');
+          return;
+        },
+        onSettled: () => {
+          setIsPending(false);
+        },
       });
-
-      const res = await response.json();
-
-      if (!response.ok) {
-        setError(res.error || 'An error occurred');
-      }
-      router.push('/settings');
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
     } finally {
       setIsPending(false);
@@ -70,20 +59,11 @@ const SignInForm = () => {
     // });
   };
   return (
-    <CardWrapper
-      headerLabel='Welcome Back'
-      backButtonHref='/sign-up'
-      backButtonLabel="Don't have an account?"
-      showSocial
-    >
+    <CardWrapper headerLabel='Welcome Back' backButtonHref='/sign-up' backButtonLabel="Don't have an account?" showSocial>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
           <div className='space-y-4'>
-            {/*
-             * @todo
-             */}
-            <FormError message={error || urlError} />
-            {/* <FormSuccess message={success} /> */}
+            {message && <FormMessageDisplay message={message} typeMessage={typeMessage} />}
             <FormField
               control={form.control}
               name='email'
@@ -91,13 +71,7 @@ const SignInForm = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder='example@gmail.com'
-                      type='email'
-                      className='bg-gray-50'
-                    />
+                    <Input {...field} disabled={isPending} placeholder='example@gmail.com' type='email' className='bg-gray-50' />
                   </FormControl>
                   <FormMessage className='text-red' />
                 </FormItem>
@@ -110,13 +84,7 @@ const SignInForm = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder='********'
-                      type='password'
-                      className='bg-gray-50'
-                    />
+                    <Input {...field} disabled={isPending} placeholder='********' type='password' className='bg-gray-50' />
                   </FormControl>
                   <FormMessage className='text-red' />
                 </FormItem>
@@ -128,15 +96,11 @@ const SignInForm = () => {
             className='font-normal w-full text-indigo-500 text-center flex justify-end items-center'
             size='sm'
           >
-            <Link href={'/forgot-password'} className=''>
+            <Link href={'/recovery'} className=''>
               Forgot Password?
             </Link>
           </Button>
-          <Button
-            type='submit'
-            disabled={isPending}
-            className='w-full bg-blue-600 hover:bg-blue-700 text-white'
-          >
+          <Button type='submit' disabled={isPending} className='w-full bg-blue-600 hover:bg-blue-700 text-white'>
             Sign In
           </Button>
         </form>

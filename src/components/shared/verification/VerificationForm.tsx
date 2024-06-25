@@ -1,32 +1,21 @@
 'use client';
-import React, {
-  ChangeEvent,
-  createRef,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { ChangeEvent, createRef, useCallback, useEffect, useRef, useState } from 'react';
 import CardWrapper from '../CardWrapper';
 import { PulseLoader } from 'react-spinners';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  VerificationTokenSignUp,
-} from '@/actions/verification.actions';
-import { FormError } from '../FormError';
-import { FormSuccess } from '../FormSuccess';
+import { VerificationTokenSignUp } from '@/actions/tokenChecking';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  handleChange,
-  handlePaste,
-} from '@/hook/verification/VerificationInputEvents';
+import { handleChange, handlePaste } from '@/hook/verification/VerificationInputEvents';
 import { makeToastError } from '@/lib/helpers/makeToast';
 import { calculateRemainingTime, formatTime } from '@/lib/utils';
+import { useResendVCodeMutation, useVerificationcCodeMutation } from '@/lib/queries';
+import { FormMessageDisplay } from '../FormMessageDisplay';
 
 const VerificationForm = () => {
-  const [error, setError] = useState<string | undefined>('');
-  const [success, setSuccess] = useState<string | undefined>('');
+  const [message, setMessage] = useState<string | undefined>('');
+  const [typeMessage, setTypeMessage] = useState('');
+
   const [header, setHeader] = useState<string | undefined>('');
   const [labelLink, setLabelLink] = useState<string | undefined>('');
   const [isPending, setIsPending] = useState<boolean>(false);
@@ -36,29 +25,32 @@ const VerificationForm = () => {
   const [expirationTime, setExpirationTime] = useState<Date | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const inputRefs = useRef<Array<React.RefObject<HTMLInputElement>>>([]);
-
+  const mutationSubmit = useVerificationcCodeMutation();
+  const mutationResend = useResendVCodeMutation();
   const router = useRouter();
+
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const Ttype = searchParams.get('type');
   const checkToken = useCallback(async () => {
     if (!token) {
-      setError('Token Expired');
-      return;
+      // setMessage('Undefined Token or Token is Expired.');
+      // setTypeMessage('error');
+      return router.push('/recovery');
     }
 
     try {
-      const data = await VerificationTokenSignUp(token);
+      const data = await VerificationTokenSignUp(token, Ttype);
+      if(data.errorRecovery){
+        return router.push('/recovery')
+      }
       if (data.error) {
-        setError(data.error);
+        setMessage(data.error);
+        setTypeMessage('error');
       } else {
         setHeader('Confirming your verification code');
-
         setLoading(false);
-        if (
-          data.existingToken &&
-          data.existingToken.email &&
-          data.existingToken.expiresCode
-        ) {
+        if (data.existingToken && data.existingToken.email && data.existingToken.expiresCode) {
           setTokenEmail(data.existingToken.email);
           setExpirationTime(new Date(data.existingToken.expiresCode));
         }
@@ -70,7 +62,7 @@ const VerificationForm = () => {
 
   useEffect(() => {
     checkToken();
-  }, [checkToken, tokenEmail])
+  }, [checkToken, tokenEmail]);
 
   useEffect(() => {
     if (inputRefs.current.length !== inputCode.length) {
@@ -98,36 +90,38 @@ const VerificationForm = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [inputCode.length, secondsRemaining,expirationTime, ]);
-  
+  }, [inputCode.length, secondsRemaining, expirationTime]);
+
   const handleSubmit = async () => {
     try {
       const verificationCode = inputCode.join('');
-      if (verificationCode.length !== 6)
-        return makeToastError('Please complete the verification code.');
+      if (verificationCode.length !== 6) return makeToastError('Please complete the verification code.');
       setLoading(true);
-      const data = {
-        email: tokenEmail,
-        verificationCode: verificationCode,
-      };
-      const response = await fetch('/api/auth/verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const res = await response.json();
-
-      if (!response.ok) {
-        makeToastError(res.error);
-        setLoading(false);
-      } else {
-        setLoading(false);
+      try {
+        setIsPending(true);
+        const data = {
+          email: tokenEmail,
+          verificationCode: verificationCode,
+        };
         setLabelLink('');
-        setSuccess('Verification completed!');
-        router.push('/sign-in');
+        mutationSubmit.mutate(data, {
+          onSuccess: (res) => {
+            setMessage('Verification completed!');
+            setTypeMessage('success');
+            router.push('/sign-in');
+          },
+          onError: (error) => {
+            makeToastError(error.message);
+            return;
+          },
+          onSettled: () => {
+            setIsPending(false);
+          },
+        });
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsPending(false);
       }
     } catch (error) {
       console.log(error);
@@ -136,22 +130,25 @@ const VerificationForm = () => {
 
   const onResendCode = async () => {
     try {
+      setLabelLink('');
       const data = {
         email: tokenEmail,
       };
-      const response = await fetch('/api/auth/verification/resend', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      mutationResend.mutate(data, {
+        onSuccess: (res) => {
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         },
-        body: JSON.stringify(data),
+        onError: (error) => {
+          setLabelLink('Resend Verification Code');
+          makeToastError(error.message);
+          return;
+        },
+        onSettled: () => {
+          setIsPending(false);
+        },
       });
-      const res = await response.json();
-      if (!response.ok) {
-        throw new Error('Failed to resend verification code', res.error);
-      }
-      console.log(res);
-      window.location.reload();
     } catch (error) {
       console.log(error);
     }
@@ -160,21 +157,17 @@ const VerificationForm = () => {
     <CardWrapper
       headerLabel={header || 'Please double check your token or sign up again.'}
       backButtonHref=''
-      backButtonLabel={labelLink}
+      backButtonLabel={header ? labelLink : ''}
       onResendCode={onResendCode}
     >
-      {expirationTime && !success && (
+      {expirationTime && !message && (
         <div className='flex items-center justify-center'>
-          <div className='text-center rounded-md mb-[3%] sm:text-3xl text-xl font-medium'>
-            {formatTime(secondsRemaining)}
-          </div>
+          <div className='text-center rounded-md mb-[3%] sm:text-3xl text-xl font-medium'>{formatTime(secondsRemaining)}</div>
         </div>
       )}
       <div className='flex items-center justify-center sm:p-5 p-0 gap-2 sm:gap-4'>
-        {!error && !success && loading && (
-          <PulseLoader className='text-sm gap-2 p-5' />
-        )}
-        {!error && !loading && !success
+        {!message && loading && <PulseLoader className='text-sm gap-2 p-5' />}
+        {!loading && !message
           ? inputCode.map((value, index) => (
               <Input
                 key={index}
@@ -184,33 +177,19 @@ const VerificationForm = () => {
                 ref={inputRefs.current[index]}
                 className='text-center rounded-md h-16 sm:text-3xl text-xl font-medium'
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  handleChange(
-                    index,
-                    e.target.value,
-                    inputCode,
-                    setInputCode,
-                    inputRefs
-                  )
+                  handleChange(index, e.target.value, inputCode, setInputCode, inputRefs)
                 }
                 onPaste={(e) => handlePaste(e, inputCode, setInputCode, inputRefs)}
               />
             ))
           : null}
-
-        {error && <FormError message={error} />}
-        {success && <FormSuccess message={success} />}
+        {message && <FormMessageDisplay message={message} typeMessage={typeMessage} />}
       </div>
-      {!error && !loading && !success ? (
+      {!message && !loading ? (
         <>
-          <p className='text-muted-foreground mt-3 sm:mt-0 text-sm'>
-            • Enter the code from your email address.
-          </p>
-          <p className='text-muted-foreground text-sm'>
-            • Do not share your code to anyone.
-          </p>
-          <p className='text-muted-foreground mt-3 sm:mt-0 text-sm'>
-            • This link only available for only 24hrs.
-          </p>
+          <p className='text-muted-foreground mt-3 sm:mt-0 text-sm'>• Enter the code from your email address.</p>
+          <p className='text-muted-foreground text-sm'>• Do not share your code to anyone.</p>
+          <p className='text-muted-foreground mt-3 sm:mt-0 text-sm'>• This link only available for only 24hrs.</p>
 
           <div className='flex justify-center items-center mt-5'>
             <Button

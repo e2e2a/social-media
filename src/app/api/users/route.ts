@@ -17,12 +17,12 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
     //     return res.status(401).json({ error: 'User not authenticated' });
     //   }
 
-    if (!apiKey || apiKey !== NEXT_PUBLIC_API_KEY) {
-      return NextResponse.json(
-        { error: 'Unauthorized access: API key missing or invalid.' },
-        { status: 401 }
-      );
-    }
+    // if (!apiKey || apiKey !== NEXT_PUBLIC_API_KEY) {
+    //   return NextResponse.json(
+    //     { error: 'Unauthorized access: API key missing or invalid.' },
+    //     { status: 401 }
+    //   );
+    // }
     // if (session && session.user.role !== 'ADMIN') {
     //     return NextResponse.json(
     //     {

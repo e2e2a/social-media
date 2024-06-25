@@ -24,11 +24,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    // <SessionProvider>
+    <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        {/* <ReactQueryDevtools /> */}
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
         {children}
       </QueryClientProvider>
-    // </SessionProvider>
+    </SessionProvider>
   )
 }

@@ -1,8 +1,6 @@
 'use server';
 import { getUserByEmail } from '@/services/user';
 import { NextRequest, NextResponse } from 'next/server';
-import { sendVerificationEmail } from '@/lib/helpers/mail';
-import { generateVerificationCode } from '@/lib/helpers/tokens';
 import db from '@/lib/db';
 import { getVerificationTokenByEmail } from '@/services/verification-token';
 

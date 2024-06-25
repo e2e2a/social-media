@@ -21,7 +21,10 @@ export const SignupValidator = z
     path: ['CPassword'],
   });
 
-
+export const RecoveryValidator = z
+  .object({
+    email: z.string().email({ message: 'Email is Required.' }),
+  })
   
 export const ProfileValidation = z.object({
   file: z.custom<File[]>(),
