@@ -1,5 +1,5 @@
 import React from 'react';
-import RecoveryForm from './components/RecoveryForm';
+import RecoveryForm from './components/Form';
 
 const RecoverPage = () => {
   return (
