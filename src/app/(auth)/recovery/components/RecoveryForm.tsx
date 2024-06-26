@@ -31,7 +31,10 @@ const RecoveryForm = () => {
       mutation.mutate(data, {
         onSuccess: (res) => {
           console.log(res);
-          // router.push('/');
+          setMessage(res.success);
+          setTypeMessage('success');
+          router.push(`/verification?token=${res.token}`);
+          return;
         },
         onError: (error) => {
           setMessage(error.message);
@@ -49,7 +52,7 @@ const RecoveryForm = () => {
     }
   };
   return (
-    <CardWrapper headerLabel='Find your lost email.' backButtonHref='/sign-in' backButtonLabel="Go back to signin?">
+    <CardWrapper headerLabel='Enter your email to reset your password.' backButtonHref='/sign-in' backButtonLabel="Go back to signin?">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
           <div className='space-y-4'>

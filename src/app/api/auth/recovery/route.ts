@@ -21,15 +21,12 @@ export async function POST(req: NextRequest) {
 
     const existingUser = await getUserByEmail(email);
 
-    if (!existingUser || !existingUser.email || !existingUser.password) {
+    if (!existingUser || !existingUser.email || !existingUser.emailVerified || !existingUser.password) {
       return NextResponse.json({ error: 'Email does not exist!' }, { status: 404 });
     }
 
-    if (!existingUser.emailVerified) {
-      return NextResponse.json({ error: 'User not found.' }, { status: 403 });
-    }
-    //
-    const verificationToken = await generateVerificationToken(email);
+    const tokenType = 'Recovery';
+    const verificationToken = await generateVerificationToken(email,tokenType);
     await sendVerificationEmail(
       verificationToken.email,
       verificationToken.code,
@@ -37,7 +34,7 @@ export async function POST(req: NextRequest) {
       'Recovery Activation'
     );
 
-    return NextResponse.json({ message: 'watta nice successful' }, { status: 200 });
+    return NextResponse.json({ success: 'Confirmation email sent!', token: verificationToken.token }, { status: 200 });
   } catch (error) {
     console.error('Error processing request:', error);
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });

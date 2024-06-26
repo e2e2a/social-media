@@ -1,6 +1,5 @@
 'use client';
 import React, { ChangeEvent, createRef, useCallback, useEffect, useRef, useState } from 'react';
-import CardWrapper from '../CardWrapper';
 import { PulseLoader } from 'react-spinners';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { VerificationTokenSignUp } from '@/actions/tokenChecking';
@@ -9,10 +8,25 @@ import { Button } from '@/components/ui/button';
 import { handleChange, handlePaste } from '@/hook/verification/VerificationInputEvents';
 import { makeToastError } from '@/lib/helpers/makeToast';
 import { calculateRemainingTime, formatTime } from '@/lib/utils';
-import { useResendVCodeMutation, useVerificationcCodeMutation } from '@/lib/queries';
-import { FormMessageDisplay } from '../FormMessageDisplay';
+import { useResendVCodeMutation, useTokenCheckQuery, useVerificationcCodeMutation } from '@/lib/queries';
+import CardWrapper from '@/components/shared/CardWrapper';
+import { FormMessageDisplay } from '@/components/shared/FormMessageDisplay';
+interface IResult {
+  result?: {
+    error: string;
+    success: string;
+    existingToken: {
+      id: string;
+      email: string;
+      token: string;
+      code: string;
+      expires: Date;
+      expiresCode: Date;
+    };
+  };
+}
 
-const VerificationForm = () => {
+const VerificationForm = (result: IResult) => {
   const [message, setMessage] = useState<string | undefined>('');
   const [typeMessage, setTypeMessage] = useState('');
 
@@ -28,41 +42,47 @@ const VerificationForm = () => {
   const mutationSubmit = useVerificationcCodeMutation();
   const mutationResend = useResendVCodeMutation();
   const router = useRouter();
-
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const Ttype = searchParams.get('type');
-  const checkToken = useCallback(async () => {
-    if (!token) {
-      // setMessage('Undefined Token or Token is Expired.');
-      // setTypeMessage('error');
-      return router.push('/recovery');
-    }
-
-    try {
-      const data = await VerificationTokenSignUp(token, Ttype);
-      if(data.errorRecovery){
-        return router.push('/recovery')
-      }
-      if (data.error) {
-        setMessage(data.error);
-        setTypeMessage('error');
-      } else {
-        setHeader('Confirming your verification code');
-        setLoading(false);
-        if (data.existingToken && data.existingToken.email && data.existingToken.expiresCode) {
-          setTokenEmail(data.existingToken.email);
-          setExpirationTime(new Date(data.existingToken.expiresCode));
-        }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }, [token, loading]);
-
   useEffect(() => {
-    checkToken();
-  }, [checkToken, tokenEmail]);
+    if (result && result.result) {
+      setHeader('Confirming your verification code');
+      setLoading(false);
+      if (result.result.existingToken && result.result.existingToken.email && result.result.existingToken.expiresCode) {
+        setTokenEmail(result.result.existingToken.email);
+        setExpirationTime(new Date(result.result.existingToken.expiresCode));
+      }
+    }
+  }, [result, result.result]);
+  /**
+   * @todo set setHeader,setTokenEmail, setExpirationTime
+   */
+
+  //   const checkToken = useCallback(async () => {
+  //     try {
+  //     //   const data = await VerificationTokenSignUp(token, Ttype);
+  //     //   const result = await data.json()
+  //       console.log(result);
+  //     //   if(data.errorRecovery){
+  //     //     return router.push('/recovery')
+  //     //   }
+  //     //   if (data.error) {
+  //     //     setMessage(data.error);
+  //     //     setTypeMessage('error');
+  //     //   } else {
+  //     //     setHeader('Confirming your verification code');
+  //     //     setLoading(false);
+  //     //     if (data.existingToken && data.existingToken.email && data.existingToken.expiresCode) {
+  //     //       setTokenEmail(data.existingToken.email);
+  //     //       setExpirationTime(new Date(data.existingToken.expiresCode));
+  //     //     }
+  //     //   }
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   }, [token, loading]);
+
+  //   useEffect(() => {
+  //     checkToken();
+  //   }, [checkToken, tokenEmail]);
 
   useEffect(() => {
     if (inputRefs.current.length !== inputCode.length) {
@@ -153,6 +173,7 @@ const VerificationForm = () => {
       console.log(error);
     }
   };
+
   return (
     <CardWrapper
       headerLabel={header || 'Please double check your token or sign up again.'}

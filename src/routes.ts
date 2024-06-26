@@ -24,3 +24,4 @@ export const apiAuthPrefix = '/api/auth';
  * @type {string}
  */
 export const DEFAULT_LOGIN_REDIRECT = "/settings";
+export const DEFAULT_RECOVERY_REDIRECT = "/recovery";

@@ -1,5 +1,5 @@
-import SignInForm from '@/components/shared/auth/SignInForm';
 import React from 'react';
+import SignInForm from './components/Form';
 
 const SignInPage = () => {
   return (

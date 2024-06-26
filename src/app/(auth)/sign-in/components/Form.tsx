@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import CardWrapper from '../CardWrapper';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SigninValidator } from '@/lib/validators/Validator';
@@ -11,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSignInMutation } from '@/lib/queries';
-import { FormMessageDisplay } from '../FormMessageDisplay';
+import CardWrapper from '@/components/shared/CardWrapper';
+import { FormMessageDisplay } from '@/components/shared/FormMessageDisplay';
 
 const SignInForm = () => {
   const searchParams = useSearchParams();

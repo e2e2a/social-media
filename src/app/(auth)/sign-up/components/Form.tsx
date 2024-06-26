@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import CardWrapper from '../CardWrapper';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { SignupValidator } from '@/lib/validators/Validator';
 import { useRouter } from 'next/navigation';
 import { useSignUpMutation } from '@/lib/queries';
-import { FormMessageDisplay } from '../FormMessageDisplay';
+import CardWrapper from '@/components/shared/CardWrapper';
+import { FormMessageDisplay } from '@/components/shared/FormMessageDisplay';
 
 const SignUpForm = () => {
   const [isPending, setIsPending] = useState(false);

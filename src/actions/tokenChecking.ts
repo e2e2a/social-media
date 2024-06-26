@@ -9,6 +9,7 @@ import {
   getVerificationTokenByToken,
 } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 
 export const VerificationTokenSignUp = async (token: string, Ttype?: string | null) => {
   try {
@@ -17,12 +18,12 @@ export const VerificationTokenSignUp = async (token: string, Ttype?: string | nu
     }) as jwt.JwtPayload;
     // Check if decoded token is null or undefined
     if (!decodedToken) {
-      return { error: 'Invalid token' };
+      return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
     }
 
     const existingToken = await getVerificationTokenByEmail(decodedToken.email);
     if (!existingToken) {
-      return { error: 'Token not found' };
+      return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
 
     const existingUser = await getUserByEmail(existingToken.email);
@@ -30,27 +31,28 @@ export const VerificationTokenSignUp = async (token: string, Ttype?: string | nu
       case 'reset-password':
         if (!existingUser || !existingUser.emailVerified) {
           console.log('hello')
-          return { errorRecovery: 'User email is not verified. Redirecting to recovery page...' };
+          return NextResponse.json({ errorRecovery: 'User email is not verified. Redirecting to recovery page...' }, { status: 400 });
+          // return { errorRecovery: 'User email is not verified. Redirecting to recovery page...' };
         }
         break;
-      default:
+      default:  
         break;
     }
 
     const hasExpired = new Date(existingToken.expires) < new Date();
 
     if (hasExpired) {
-      return { error: 'Token has expired' };
+      return NextResponse.json({ error: 'Token has expired' }, { status: 400 });
     }
 
     if (!existingUser) {
-      return { error: 'User not found' };
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    return { existingToken: existingToken };
+    return NextResponse.json({ existingToken: existingToken }, { status:200});
   } catch (error: any) {
-    return {
-      error: `Undefined Token or Token is Expired.`,
-    };
+    NextResponse.json({ error: 'User email is not verified' }, { status: 400 });
+    return NextResponse.redirect('/recovery',{
+      status: 404});
   }
 };
 interface TokenI {

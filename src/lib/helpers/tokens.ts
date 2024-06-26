@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import db from '../db';
 import { generateRandomString } from './verificationCode';
 
-export const generateVerificationToken = async (email: string) => {
+export const generateVerificationToken = async (email: string, TokenType: string) => {
   const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours in milliseconds
   const token = jwt.sign(
     { email, exp: expirationTime.getTime() },
@@ -29,6 +29,7 @@ export const generateVerificationToken = async (email: string) => {
       email,
       token,
       code: activitionCode,
+      tokenType: TokenType,
       expires: expirationTime,
       expiresCode: expireCode,
     },
