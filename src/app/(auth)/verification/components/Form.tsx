@@ -20,6 +20,7 @@ interface IResult {
       email: string;
       token: string;
       code: string;
+      tokenType: string;
       expires: Date;
       expiresCode: Date;
     };
@@ -46,7 +47,7 @@ const VerificationForm = (result: IResult) => {
     if (result && result.result) {
       setHeader('Confirming your verification code');
       setLoading(false);
-      if (result.result.existingToken && result.result.existingToken.email && result.result.existingToken.expiresCode) {
+      if (result.result.existingToken && result.result.existingToken.email && result.result.existingToken.expiresCode && result.result.existingToken.tokenType) {
         setTokenEmail(result.result.existingToken.email);
         setExpirationTime(new Date(result.result.existingToken.expiresCode));
       }
@@ -122,13 +123,20 @@ const VerificationForm = (result: IResult) => {
         const data = {
           email: tokenEmail,
           verificationCode: verificationCode,
+          Ttype: result.result?.existingToken.tokenType
         };
         setLabelLink('');
         mutationSubmit.mutate(data, {
           onSuccess: (res) => {
             setMessage('Verification completed!');
             setTypeMessage('success');
-            router.push('/sign-in');
+            if(!res.token){
+             router.push('/sign-in');
+             return;
+            } else{
+              router.push(`/recovery/reset-password?token=${res.token.token}`);
+              return;
+            }
           },
           onError: (error) => {
             makeToastError(error.message);

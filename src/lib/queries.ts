@@ -44,9 +44,25 @@ export const useSignInMutation = () => {
 interface data {
   email: string;
   verificationCode?: string;
+  Ttype?: string;
 }
 export const useVerificationcCodeMutation = () => {
-  return useMutation<{ error: string; success: string }, Error, data>({
+  return useMutation<
+    {
+      error: string;
+      success: string;
+      token?: {
+        id: string;
+        email: string;
+        token: string;
+        expires: Date;
+        createdAt: Date;
+        updatedAt: Date;
+      };
+    },
+    Error,
+    data
+  >({
     mutationFn: fetchVerficationCode,
   });
 };
@@ -100,16 +116,17 @@ export const useTokenCheckQuery = (data: tokenCheck) => {
         email: string;
         token: string;
         code: string;
+        tokenType: string;
         expires: Date;
         expiresCode: Date;
-    }
+      };
     },
     Error
   >({
     queryKey: ['TokenCheck', data],
     queryFn: fetchTokenEmail,
-    retry:0,
-    retryDelay: attemptIndex => attemptIndex * 1000,
+    retry: 0,
+    retryDelay: (attemptIndex) => attemptIndex * 1000,
   });
 };
 

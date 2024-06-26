@@ -21,4 +21,15 @@ export const getVerificationTokenByEmail = async (email: string) => {
       return null;
     }
   };
+
+export const getResetPasswordTokenByEmail = async (email: string) => {
+    try {
+      const verificationToken = await db.resetPassword.findFirst({
+        where: { email },
+      });
+      return verificationToken;
+    } catch (error) {
+      return null;
+    }
+  };
   

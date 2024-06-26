@@ -1,5 +1,5 @@
 "use server"
-import { getVerificationTokenByEmail } from '@/services/verification-token';
+import { getResetPasswordTokenByEmail, getVerificationTokenByEmail } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
 import db from '../db';
 import { generateRandomString } from './verificationCode';
@@ -37,6 +37,32 @@ export const generateVerificationToken = async (email: string, TokenType: string
   return verificationToken;
 };
 
+export const generateResetPasswordToken = async (email: string) => {
+  const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+  const token = jwt.sign(
+    { email, exp: expirationTime.getTime() },
+    process.env.JWT_SECRET!,
+    { algorithm: 'HS256' }
+  );
+
+  const existingToken = await getResetPasswordTokenByEmail(email);
+  if (existingToken) {
+    await db.resetPassword.delete({
+      where: {
+        id: existingToken.id,
+      },
+    });
+  }
+
+  const verificationToken = await db.resetPassword.create({
+    data: {
+      email,
+      token,
+      expires: expirationTime,
+    },
+  });
+  return verificationToken;
+};
 
 export const generateVerificationCode = async (email: string) => {
   const existingToken = await getVerificationTokenByEmail(email);
