@@ -22,7 +22,7 @@ import { QUERY_KEYS } from '@/lib/queryKeys';
 //   // deleteSavedPost,
 // } from "@/lib/api";
 import { INewPost, INewUser, IUpdatePost, IUpdateUser } from '@/types';
-import { fetchRecoveryEmail, fetchResendVCode, fetchSignIn, fetchSignUp, fetchTokenEmail, fetchVerficationCode } from './api';
+import { fetchRecoveryEmail, fetchRecoveryTokenEmail, fetchResendVCode, fetchSignIn, fetchSignUp, fetchTokenEmail, fetchVerficationCode } from './api';
 import { SigninValidator, SignupValidator } from './validators/Validator';
 import { z } from 'zod';
 
@@ -126,7 +126,30 @@ export const useTokenCheckQuery = (data: tokenCheck) => {
     queryKey: ['TokenCheck', data],
     queryFn: fetchTokenEmail,
     retry: 0,
-    retryDelay: (attemptIndex) => attemptIndex * 1000,
+    // retryDelay: (attemptIndex) => attemptIndex * 1000,
+  });
+};
+export const useRecoveryTokenCheckQuery = (data: tokenCheck) => {
+  return useQuery<
+    {
+      error: string;
+      success: string;
+      existingToken: {
+        id: string;
+        email: string;
+        token: string;
+        code: string;
+        tokenType: string;
+        expires: Date;
+        expiresCode: Date;
+      };
+    },
+    Error
+  >({
+    queryKey: ['RecoveryTokenCheck', data],
+    queryFn: fetchRecoveryTokenEmail,
+    retry: 0,
+    // retryDelay: (attemptIndex) => attemptIndex * 1000,
   });
 };
 

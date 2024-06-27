@@ -112,7 +112,26 @@ export const fetchTokenEmail = async ({ queryKey }: QueryFunctionContext) => {
   const res = await response.json();
 
   if (!response.ok) {
-    throw new Error(res.error || 'Failed to checkToken.');
+    throw new Error(res.error || 'Failed to check token.');
+  }
+
+  return res;
+};
+
+export const fetchRecoveryTokenEmail = async ({ queryKey }: QueryFunctionContext) => {
+  const [_key, data] = queryKey as [string, tokenCheck];
+  const response = await fetch('/api/token/reset-password-token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  const res = await response.json();
+
+  if (!response.ok) {
+    throw new Error(res.error || 'Failed to check token.');
   }
 
   return res;

@@ -5,6 +5,14 @@ export const SigninValidator = z.object({
   password: z.string().min(1, { message: 'Password is Required.' }),
 });
 
+export const NewPasswordValidator = z.object({
+  password: z.string().min(6, { message: 'Password must atleast 6 characters.' }),
+  CPassword: z.string(),
+}).refine((data) => data.password === data.CPassword, {
+  message: "Confirmation password doesn't match!",
+  path: ['CPassword'],
+});
+
 export const SignupValidator = z
   .object({
     email: z.string().email({ message: 'Email is Required.' }),
