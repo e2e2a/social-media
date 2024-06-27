@@ -95,7 +95,7 @@ model VerificationToken {
 
 model ResetPassword {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  email       String
+  email       String   @unique
   token       String   @unique
   expires     DateTime
 

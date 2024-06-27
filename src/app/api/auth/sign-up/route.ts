@@ -15,12 +15,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log('body', body);
     const validatedFields = SignupValidator.safeParse(body);
     if (!validatedFields.success) {
       return NextResponse.json({ error: 'Invalid fields!' }, { status: 400 });
     }
-    console.log(validatedFields);
     const { email, password, firstname, username, lastname } = validatedFields.data;
 
     const existingUser = await getUserByEmail(email);

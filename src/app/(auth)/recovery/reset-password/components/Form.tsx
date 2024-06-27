@@ -4,7 +4,7 @@ import { FormMessageDisplay } from '@/components/shared/FormMessageDisplay';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useRecoveryTokenCheckQuery } from '@/lib/queries';
+import { useNewPasswordMutation, useRecoveryTokenCheckQuery } from '@/lib/queries';
 import { NewPasswordValidator } from '@/lib/validators/Validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,6 +21,9 @@ const ResetPasswordForm = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const mutation = useNewPasswordMutation();
+
   const token = searchParams.get('token') ?? '';
   const { data: result, error } = useRecoveryTokenCheckQuery({ token });
   const checkToken = useCallback(async () => {
@@ -54,10 +57,27 @@ const ResetPasswordForm = () => {
   const onSubmit: SubmitHandler<z.infer<typeof NewPasswordValidator>> = async (data) => {
     try {
       setIsPending(true);
-      //create here new password
-    } catch (error) {
-      console.error(error);
+      const newData ={
+        ...data,
+        email: tokenEmail,
+      }
+      mutation.mutate(newData, {
+        onSuccess: (res) => {
+          setMessage(res.success);
+          setTypeMessage('success');
+          router.push(`/sign-in`);
+        },
+        onError: (error) => {
+          setMessage(error.message);
+          setTypeMessage('error');
+          return;
+        },
+        onSettled: () => {
+          setIsPending(false);
+        },
+      });
     } finally {
+      setIsPending(false);
     }
   };
   return (

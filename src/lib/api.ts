@@ -1,7 +1,10 @@
 import { z } from 'zod';
-import { SigninValidator, SignupValidator } from './validators/Validator';
+import { NewPasswordValidator, SigninValidator, SignupValidator } from './validators/Validator';
 import { QueryFunctionContext } from '@tanstack/react-query';
 
+// ============================================================
+// AUTH fetch
+// ============================================================
 export const fetchSignUp = async (data: z.infer<typeof SignupValidator>) => {
   const response = await fetch('/api/auth/sign-up', {
     method: 'POST',
@@ -118,6 +121,10 @@ export const fetchTokenEmail = async ({ queryKey }: QueryFunctionContext) => {
   return res;
 };
 
+// ============================================================
+// AUTH Recovery
+// ============================================================
+
 export const fetchRecoveryTokenEmail = async ({ queryKey }: QueryFunctionContext) => {
   const [_key, data] = queryKey as [string, tokenCheck];
   const response = await fetch('/api/token/reset-password-token', {
@@ -134,5 +141,21 @@ export const fetchRecoveryTokenEmail = async ({ queryKey }: QueryFunctionContext
     throw new Error(res.error || 'Failed to check token.');
   }
 
+  return res;
+};
+
+export const fetchNewPassword = async (data: z.infer<typeof NewPasswordValidator>) => {
+  const response = await fetch('/api/auth/recovery/reset-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  const res = await response.json();
+
+  if (!response.ok) {
+    throw new Error(res.error || 'Failed to sign up. Please try again.');
+  }
   return res;
 };

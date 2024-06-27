@@ -12,23 +12,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { token } = body;
 
-    // Verify the JWT token
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!, {
       algorithms: ['HS256'],
     }) as jwt.JwtPayload;
 
-    // Check if decoded token is null or undefined
     if (!decodedToken) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
     }
 
-    // Retrieve verification token by email
     const existingToken = await getVerificationTokenByEmail(decodedToken.email);
     if (!existingToken) {
       return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
     
-    // Retrieve user by email
     const existingUser = await getUserByEmail(existingToken.email);
 
     // // Handle different verification types
@@ -64,13 +60,11 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // Check if token has expired
     const hasExpired = new Date(existingToken.expires) < new Date();
     if (hasExpired) {
       return NextResponse.json({ error: 'Token has expired' }, { status: 400 });
     }
 
-    // If all checks pass, return success response
     return NextResponse.json({ existingToken: existingToken }, { status: 200 });
   } catch (error: any) {
     

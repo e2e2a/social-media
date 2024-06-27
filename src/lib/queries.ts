@@ -22,8 +22,8 @@ import { QUERY_KEYS } from '@/lib/queryKeys';
 //   // deleteSavedPost,
 // } from "@/lib/api";
 import { INewPost, INewUser, IUpdatePost, IUpdateUser } from '@/types';
-import { fetchRecoveryEmail, fetchRecoveryTokenEmail, fetchResendVCode, fetchSignIn, fetchSignUp, fetchTokenEmail, fetchVerficationCode } from './api';
-import { SigninValidator, SignupValidator } from './validators/Validator';
+import { fetchNewPassword, fetchRecoveryEmail, fetchRecoveryTokenEmail, fetchResendVCode, fetchSignIn, fetchSignUp, fetchTokenEmail, fetchVerficationCode } from './api';
+import { NewPasswordValidator, SigninValidator, SignupValidator } from './validators/Validator';
 import { z } from 'zod';
 
 // ============================================================
@@ -87,6 +87,7 @@ export const useResendVCodeMutation = () => {
     mutationFn: fetchResendVCode,
   });
 };
+
 export const useRecoveryMutation = () => {
   return useMutation<
     {
@@ -129,6 +130,10 @@ export const useTokenCheckQuery = (data: tokenCheck) => {
     // retryDelay: (attemptIndex) => attemptIndex * 1000,
   });
 };
+
+// ============================================================
+// AUTH Recovery
+// ============================================================
 export const useRecoveryTokenCheckQuery = (data: tokenCheck) => {
   return useQuery<
     {
@@ -150,6 +155,19 @@ export const useRecoveryTokenCheckQuery = (data: tokenCheck) => {
     queryFn: fetchRecoveryTokenEmail,
     retry: 0,
     // retryDelay: (attemptIndex) => attemptIndex * 1000,
+  });
+};
+
+export const useNewPasswordMutation = () => {
+  return useMutation<
+    {
+      error: string;
+      success: string;
+    },
+    Error,
+    z.infer<typeof NewPasswordValidator>
+  >({
+    mutationFn: fetchNewPassword,
   });
 };
 
