@@ -25,6 +25,8 @@ const Users = () => {
   const { data, error, isLoading }: UseQueryResult<any, Error> = useQuery({
     queryKey: ['users'], // Specify a unique key for this query
     queryFn: fetchData, // Pass fetchData directly as the function to execute for fetching data
+    // staleTime: 0,
+    // refetchInterval: 5 * 1000,
   });
   console.log(data)
   if (isLoading) return <div>Loading...</div>;

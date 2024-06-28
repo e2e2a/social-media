@@ -1,13 +1,14 @@
-"use server"
+'use server';
 import db from '@/lib/db';
 import { hashPassword } from '@/lib/helpers/bcrypt';
+import { deleteResetPasswordTokenByEmail } from './reset-password';
+import { deleteVerificationTokenByEmail } from './verification-token';
 
 type INewUser = {
   email: string;
   firstname: string;
   lastname: string;
   username: string;
-  emailVerified: Date;
   password: string;
 };
 
@@ -16,12 +17,21 @@ type IUpdateUserPassword = {
   password: string;
 };
 
+type IUpdateUserProfile = {
+  email: string;
+  firstname: string;
+  lastname: string;
+  username: string;
+  password: string;
+}
+
 export const createUser = async (data: INewUser) => {
   try {
-    const hashedPassword = await hashPassword(data.password);
+    const {password, ...userData}= data
+    const hashedPassword = await hashPassword(password);
     const newUser = await db.user.create({
       data: {
-        ...data,
+        ...userData,
         password: hashedPassword,
       },
     });
@@ -32,11 +42,16 @@ export const createUser = async (data: INewUser) => {
   }
 };
 
+export const getUsers = async () => {
+  const users = await db.user.findMany();
+  return users;
+};
+
 export const getUserByEmail = async (email: string) => {
   try {
     const user = db.user.findUnique({
       where: {
-        email:email,
+        email: email,
       },
     });
     return user;
@@ -57,12 +72,33 @@ export const getUserById = async (id: string) => {
     return null;
   }
 };
+/**
+ * @todo
+ */
+export const deleteUserByEmail = async (email:string) => {
+  const existingUser = await getUserByEmail(email);
+  if(existingUser){
+    if(existingUser.emailVerified){
+      await deleteVerificationTokenByEmail(email)
+      await deleteResetPasswordTokenByEmail(email)
+    }
+  }
+  await db.user.delete({
+    where:{
+      email:email
+    }
+  })
+  return;
+}
 
-// export const updateUserById = async (id: string, updateData:any) => {
+// export const updateUserInSignUp = async (updateData:IUpdateUserRegister) => {
 //   try {
+//     const {password, userId, ...data} = updateData
+//     const existingUser = await getUserById(updateData.email);
+//     const hashedPassword = await hashPassword(password);
 //     const user = await db.user.update({
 //       where: {
-//         id,
+//         id: userId
 //       },
 //       data: updateData
 //     });
@@ -71,14 +107,30 @@ export const getUserById = async (id: string) => {
 //     return null;
 //   }
 // };
+
 // export const updateUserByEmail = async (email: string, updateData:any) => {
 //   try {
 //     const user = await db.user.update({
 //       where: {
-//         email,
+//         email: email,
 //       },
 //       data: updateData
 //     });
+//     return user;
+//   } catch (error) {
+//     return null;
+//   }
+// };
+
+// export const getUserProfile = async (username: string,
+//   lastname: string,) => {
+//   try {
+//     const user = db.user.findMany({
+//       where: {
+//         username,
+//       },
+//     });
+//     console.log('userserver:', user)
 //     return user;
 //   } catch (error) {
 //     return null;
@@ -93,7 +145,7 @@ export const updateUserPasswordById = async (data: IUpdateUserPassword) => {
     if (!existingUser) {
       throw new Error('Could not find user');
     }
-    
+
     const hashedPassword = await hashPassword(password);
 
     const newPassword = await db.user.update({

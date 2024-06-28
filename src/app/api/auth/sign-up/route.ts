@@ -1,10 +1,8 @@
 'use server';
 import { SignupValidator } from '@/lib/validators/Validator';
-import { getUserByEmail } from '@/services/user';
-import { signIn } from '@/auth';
+import { createUser, deleteUserByEmail, getUserByEmail } from '@/services/user';
 import { AuthError } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { createUser, updateUser } from '@/lib/db.user';
 import { generateVerificationToken } from '@/lib/helpers/tokens';
 import { sendVerificationEmail } from '@/lib/helpers/mail';
 
@@ -27,10 +25,16 @@ export async function POST(req: NextRequest) {
       if (existingUser.emailVerified) {
         return NextResponse.json({ error: 'User already exist. Please sign in to continue.' }, { status: 409 });
       }
-      await updateUser(email, firstname, lastname, username, password);
-    } else {
-      await createUser(email, firstname, lastname, username, password);
+      await deleteUserByEmail(email);
     }
+    const data = {
+      email: email,
+      firstname: firstname,
+      lastname: lastname,
+      username: username,
+      password: password,
+    };
+    await createUser(data);
 
     const tokenType = 'Verify';
     const verificationToken = await generateVerificationToken(email, tokenType);

@@ -12,24 +12,25 @@ export const getVerificationTokenByToken = async (token: string) => {
 };
 
 export const getVerificationTokenByEmail = async (email: string) => {
-    try {
-      const verificationToken = await db.verificationToken.findFirst({
-        where: { email },
-      });
-      return verificationToken;
-    } catch (error) {
-      return null;
-    }
-  };
+  try {
+    const verificationToken = await db.verificationToken.findFirst({
+      where: { email },
+    });
+    return verificationToken;
+  } catch (error) {
+    return null;
+  }
+};
 
-export const getResetPasswordTokenByEmail = async (email: string) => {
-    try {
-      const verificationToken = await db.resetPassword.findFirst({
-        where: { email },
-      });
-      return verificationToken;
-    } catch (error) {
-      return null;
-    }
-  };
-  
+export const deleteVerificationTokenByEmail = async (email: string) => {
+  try {
+    await db.verificationToken.delete({
+      where: {
+        email: email,
+      },
+    });
+    return;
+  } catch (error) {
+    return null;
+  }
+};

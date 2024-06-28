@@ -51,12 +51,6 @@ const SignInForm = () => {
     } finally {
       setIsPending(false);
     }
-    // startTransition(() => {
-    //   SignInAction(data).then((res) => {
-    //     setError(res?.error);
-    //     // setSuccess(res?.success)
-    //   });
-    // });
   };
   return (
     <CardWrapper headerLabel='Welcome Back' backButtonHref='/sign-up' backButtonLabel="Don't have an account?" showSocial>
