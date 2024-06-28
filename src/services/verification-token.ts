@@ -34,3 +34,16 @@ export const deleteVerificationTokenByEmail = async (email: string) => {
     return null;
   }
 };
+
+export const deleteVerificationTokenByid = async (id: string) => {
+  try {
+    await db.verificationToken.delete({
+      where: {
+        id,
+      },
+    });
+    return;
+  } catch (error) {
+    return null;
+  }
+};

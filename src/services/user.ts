@@ -4,30 +4,33 @@ import { hashPassword } from '@/lib/helpers/bcrypt';
 import { deleteResetPasswordTokenByEmail } from './reset-password';
 import { deleteVerificationTokenByEmail } from './verification-token';
 
-type INewUser = {
+type IId = {
+  id: string;
+};
+
+type IUserEmail = {
   email: string;
-  firstname: string;
-  lastname: string;
-  username: string;
+};
+
+type IUserPassword = {
   password: string;
 };
 
-type IUpdateUserPassword = {
-  userId: string;
-  password: string;
+type IUserEmailVerified = IId & {
+  emailVerified: Date;
 };
 
-type IUpdateUserProfile = {
-  email: string;
+type INewUser = IUserEmail & {
   firstname: string;
   lastname: string;
   username: string;
-  password: string;
-}
+} & IUserPassword;
+
+type IUpdateUserPassword = IId & IUserPassword;
 
 export const createUser = async (data: INewUser) => {
   try {
-    const {password, ...userData}= data
+    const { password, ...userData } = data;
     const hashedPassword = await hashPassword(password);
     const newUser = await db.user.create({
       data: {
@@ -37,8 +40,7 @@ export const createUser = async (data: INewUser) => {
     });
     return newUser;
   } catch (error) {
-    console.error('Error creating user:', error);
-    throw new Error('Failed to create user');
+    return null;
   }
 };
 
@@ -75,21 +77,21 @@ export const getUserById = async (id: string) => {
 /**
  * @todo
  */
-export const deleteUserByEmail = async (email:string) => {
+export const deleteUserByEmail = async (email: string) => {
   const existingUser = await getUserByEmail(email);
-  if(existingUser){
-    if(existingUser.emailVerified){
-      await deleteVerificationTokenByEmail(email)
-      await deleteResetPasswordTokenByEmail(email)
+  if (existingUser) {
+    if (existingUser.emailVerified) {
+      await deleteVerificationTokenByEmail(email);
+      await deleteResetPasswordTokenByEmail(email);
     }
   }
   await db.user.delete({
-    where:{
-      email:email
-    }
-  })
+    where: {
+      email: email,
+    },
+  });
   return;
-}
+};
 
 // export const updateUserInSignUp = async (updateData:IUpdateUserRegister) => {
 //   try {
@@ -137,11 +139,22 @@ export const deleteUserByEmail = async (email:string) => {
 //   }
 // };
 
+/**
+ * @todo use the type in the update
+ */
+export const updateUserEmailVerifiedById = async (id: string) => {
+  await db.user.update({
+    where: { id: id },
+    data: {
+      emailVerified: new Date(),
+    },
+  });
+};
+
 export const updateUserPasswordById = async (data: IUpdateUserPassword) => {
   try {
-    // Extract data or can only extract 1 or more data
-    const { userId, password } = data;
-    const existingUser = await getUserById(userId);
+    const { id, password } = data;
+    const existingUser = await getUserById(id);
     if (!existingUser) {
       throw new Error('Could not find user');
     }
