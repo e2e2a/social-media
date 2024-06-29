@@ -13,10 +13,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    /**
-     * @todo try lru-cache if possible
-     */
-
     const headersList = headers();
     const ip = headersList.get('x-forwarded-for');
     if (!ip) {
