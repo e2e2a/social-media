@@ -1,8 +1,9 @@
 "use server"
-import { getResetPasswordTokenByEmail, getVerificationTokenByEmail } from '@/services/verification-token';
+import { getVerificationTokenByEmail } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
 import db from '../db';
 import { generateRandomString } from './verificationCode';
+import { getResetPasswordTokenByEmail } from '@/services/reset-password';
 
 export const generateVerificationToken = async (email: string, TokenType: string) => {
   const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours in milliseconds

@@ -13,8 +13,8 @@
 'use client';
 import { auth } from '@/auth';
 import Loader from '@/components/shared/Loader';
-import { getUserProfileByUsername } from '@/lib/api';
-import { useGetUserProfileByUsername } from '@/lib/queries';
+// import { getUserProfileByUsername } from '@/lib/api';
+// import { useGetUserProfileByUsername } from '@/lib/queries';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -42,8 +42,8 @@ const Profile = ({ params }: any) => {
         return;
       }
 
-      const user = await getUserProfileByUsername(username);
-      setCurrentUserProfile(user);
+      // const user = await getUserProfileByUsername(username);
+      // setCurrentUserProfile(user);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }

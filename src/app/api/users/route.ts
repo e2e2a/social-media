@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from 'next-auth/react';
 import { headers } from 'next/headers';
 
-export async function GET(req: NextApiRequest, res: NextApiResponse) {
+export async function GET(req: NextRequest, res: NextResponse) {
   try {
     const headersList = headers();
 
@@ -42,7 +42,6 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     return NextResponse.json({ users: users }, { status: 200 });
   } catch (error) {
-    console.log(error);
     return NextResponse.json({ error: error }, { status: 500 });
   }
 }

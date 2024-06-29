@@ -1,12 +1,16 @@
 import db from '@/lib/db';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const GET = async (req: NextRequest) => {
+  if (req.method !== 'GET') {
+    return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
+  }
+  try {
+    const posts = await db.post.findMany();
 
-export const GET = async (request: NextRequest) => {
-  const posts = await db.post.findMany();
-
-  console.log('posts fetched');
-  return Response.json({ posts });
+    console.log('posts fetched');
+    return NextResponse.json({ posts: posts }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 };

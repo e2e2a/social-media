@@ -1,7 +1,6 @@
 'use client';
 import { auth, signOut } from '@/auth';
 import { Button } from '@/components/ui/button';
-import { getUsers } from '@/lib/db.user';
 import React, { useEffect, useState } from 'react';
 import Users from './components/users';
 import LogoutComponents from './components/logout';

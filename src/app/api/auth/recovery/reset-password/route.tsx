@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email does not exist!' }, { status: 404 });
     }
     const data = {
-      userId: existingUser.id,
+      id: existingUser.id,
       password: password,
     };
     const updateUser = await updateUserPasswordById(data);

@@ -26,7 +26,7 @@
 //     </div>
 //   );
   
-//   const Profile = () => {
+  const Profile = () => {
 //     // const searchParams = useSearchParams();
 //     // const { user } = useUserContext();
 //     // const { pathname } = useLocation();
@@ -40,7 +40,7 @@
 //         </div>
 //       );
   
-//     return (
+    return ( <div className="flex-center w-full">hello profile</div>
 //       <div className="profile-container">
 //         <div className="profile-inner_container">
 //           <div className="flex xl:flex-row flex-col max-xl:items-center flex-1 gap-7">
@@ -141,7 +141,7 @@
 //         </Routes> */}
 //         <Outlet />
 //       </div>
-//     );
-//   };
+    );
+  };
   
-//   export default Profile;
+  export default Profile;

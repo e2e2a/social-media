@@ -2,7 +2,6 @@
 import React, { ChangeEvent, createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { PulseLoader } from 'react-spinners';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { VerificationTokenSignUp } from '@/actions/tokenChecking';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { handleChange, handlePaste } from '@/hook/verification/VerificationInputEvents';
@@ -27,7 +26,7 @@ interface IResult {
   };
 }
 
-const VerificationForm = (result: IResult) => {
+const VerificationForm = () => {
   const [message, setMessage] = useState<string | undefined>('');
   const [typeMessage, setTypeMessage] = useState('');
 
@@ -43,16 +42,36 @@ const VerificationForm = (result: IResult) => {
   const mutationSubmit = useVerificationcCodeMutation();
   const mutationResend = useResendVCodeMutation();
   const router = useRouter();
+
+
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+  const { data: result, error } = useTokenCheckQuery({ token });
+  const checkToken = useCallback(async () => {
+    if (!token) {
+      return router.push('/recovery');
+    }
+    if (error) {
+      console.error('Error fetching token:', error.message);
+      router.push('/recovery');
+      return;
+    }
+  }, [token, error, router]);
   useEffect(() => {
-    if (result && result.result) {
+    checkToken();
+  }, [checkToken]);
+
+
+  useEffect(() => {
+    if (result ) {
       setHeader('Confirming your verification code');
       setLoading(false);
-      if (result.result.existingToken && result.result.existingToken.email && result.result.existingToken.expiresCode && result.result.existingToken.tokenType) {
-        setTokenEmail(result.result.existingToken.email);
-        setExpirationTime(new Date(result.result.existingToken.expiresCode));
+      if (result.existingToken && result.existingToken.email && result.existingToken.expiresCode && result.existingToken.tokenType) {
+        setTokenEmail(result.existingToken.email);
+        setExpirationTime(new Date(result.existingToken.expiresCode));
       }
     }
-  }, [result, result.result]);
+  }, [result]);
   /**
    * @todo set setHeader,setTokenEmail, setExpirationTime
    */
@@ -123,7 +142,7 @@ const VerificationForm = (result: IResult) => {
         const data = {
           email: tokenEmail,
           verificationCode: verificationCode,
-          Ttype: result.result?.existingToken.tokenType
+          Ttype: result?.existingToken.tokenType
         };
         setLabelLink('');
         mutationSubmit.mutate(data, {
