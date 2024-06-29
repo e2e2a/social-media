@@ -4,16 +4,35 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIpAddress } from '@/lib/helpers/getIp';
+import rateLimit from '@/lib/helpers/rate-limit-test';
+import { headers } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
-      { message: `Method ${req.method} Not Allowed` },
-      { status: 405 }
-    );
+    return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
   }
 
   try {
+    /**
+     * @todo try lru-cache if possible
+     */
+
+    const headersList = headers();
+    const ip = headersList.get('x-forwarded-for');
+    if (!ip) {
+      return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
+    }
+    try {
+      const myLimitTest = await rateLimit(ip);
+      console.log('ipRequestCounts', myLimitTest.ipRequestCounts)
+      if (myLimitTest?.error) {
+        return NextResponse.json({ error: myLimitTest.error }, { status: 429 });
+      }
+      console.log(myLimitTest.ip?.toString());
+    } catch (error) {
+      console.error('Rate limit exceeded:', error);
+      return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
+    }
     // const ipAddress = await getIpAddress();
     // if (!ipAddress.success) {
     //   return NextResponse.json(
@@ -52,17 +71,11 @@ export async function POST(req: NextRequest) {
       if (error instanceof AuthError) {
         switch (error.type) {
           case 'CredentialsSignin':
-            return NextResponse.json(
-              { error: 'Password not match!' },
-              { status: 401 }
-            );
+            return NextResponse.json({ error: 'Password not match!' }, { status: 401 });
           case 'AccessDenied':
             return NextResponse.json({ error: 'Access denied!' }, { status: 403 });
           default:
-            return NextResponse.json(
-              { error: 'Something went wrong.' },
-              { status: 500 }
-            );
+            return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
         }
       }
       throw error;
