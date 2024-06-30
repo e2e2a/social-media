@@ -6,10 +6,21 @@ import {
   authRoutes,
   publicRoutes,
 } from '@/routes';
+import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
 
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
+  const res = NextResponse.next();
+  let uniqueId = req.cookies.get('uniqueId')?.value;
+
+  if (!uniqueId) {
+    uniqueId = uuidv4();
+    res.cookies.set('uniqueId', uniqueId, { httpOnly: true, secure: true, path: '/' });
+  }
+
+
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
