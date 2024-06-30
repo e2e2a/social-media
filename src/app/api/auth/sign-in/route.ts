@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
     //   return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
     // }
     try {
-      const myLimitTest = await rateLimit(headersList);
-      console.log('ipRequestCounts', myLimitTest.ipRequestCounts)
+      const myLimitTest = await rateLimit(req);
+      console.log('ipRequestCounts', myLimitTest?.requestCounts)
       if (myLimitTest?.error) {
         return NextResponse.json({ error: myLimitTest.error }, { status: 429 });
       }
-      console.log(myLimitTest.ip?.toString());
+      console.log(myLimitTest.uniqueId?.toString());
     } catch (error) {
       console.error('Rate limit exceeded:', error);
       return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
