@@ -4,7 +4,8 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIpAddress } from '@/lib/helpers/getIp';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
+import rateLimit from '@/lib/helpers/rate-limit-test';
 
 export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
@@ -12,22 +13,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // const headersList = headers();
-    // console.log(headersList);
-    // const forwardedFor  = headersList.get('x-forwarded-for');
-    // const ipAddress = forwardedFor?.split(",").at(0) ?? "Unknown";
+    const headersList = headers();
+    const resp= NextResponse.next()
+    const uniqueId  = resp.headers.get('uniqueId');
+    const forwardedFor  = headersList.get('x-forwarded-for');
+    const ipAddress = forwardedFor?.split(',')[0].trim() ?? "Unknown";
+
+    // console.log('Headers:', headersList);
+    // console.log('uniqueId:', uniqueId);
     // console.log('ipAddress:', ipAddress);
-    // if (!ip) {
-    //   return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
-    // }
-   
-    const ipAddress = await getIpAddress();
-    if (!ipAddress.success) {
-      return NextResponse.json(
-        { error: 'Your requesting too much, please try again a couple of minutes.' },
-        { status: 429 }
-      );
+    
+    try {
+      const myLimit = await rateLimit().then((res) => {
+        console.log('Limit:', res);
+      })
+    } catch (error) {
+      return NextResponse.json({ error: 'Rate Limit exceeded.' }, { status: 429 });
     }
+    
+   
+    // const ipAddress = await getIpAddress();
+    // if (!ipAddress.success) {
+    //   return NextResponse.json(
+    //     { error: 'Your requesting too much, please try again a couple of minutes.' },
+    //     { status: 429 }
+    //   );
+    // }
     const body = await req.json();
     const validatedFields = SigninValidator.safeParse(body);
 
@@ -73,7 +84,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }
-function rateLimit(req: NextRequest) {
-  throw new Error('Function not implemented.');
-}
+
 
