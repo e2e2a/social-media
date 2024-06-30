@@ -15,11 +15,11 @@ export async function POST(req: NextRequest) {
   try {
     const headersList = headers();
     const ip = headersList.get('x-forwarded-for');
-    if (!ip) {
-      return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
-    }
+    // if (!ip) {
+    //   return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
+    // }
     try {
-      const myLimitTest = await rateLimit(ip);
+      const myLimitTest = await rateLimit(headersList);
       console.log('ipRequestCounts', myLimitTest.ipRequestCounts)
       if (myLimitTest?.error) {
         return NextResponse.json({ error: myLimitTest.error }, { status: 429 });
