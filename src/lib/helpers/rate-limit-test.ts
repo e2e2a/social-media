@@ -12,19 +12,19 @@ const expirationTimeMs = 60 * 1000; // 1 minute
 
 export default async function rateLimit(req: NextRequest) {
   const cookieStore = cookies();
-  let uniqueId = cookieStore.get('uniqueId')?.value;
+  const id = req.cookies.get('uniqueId')!.value;
+  console.log('id:', id);
 
-  if (!uniqueId) {
-    uniqueId = uuidv4(); // Generate a new UUID if not found in cookies
-    NextResponse.next().cookies.set({
+  // Check if uniqueId already exists in cookies
+  const response = NextResponse.next();
+  if (!id) {
+    const userUniqueId = uuidv4(); // Generate a new UUID if not found in cookies
+    response.cookies.set({
       name: 'uniqueId',
-      value: uniqueId,
+      value: userUniqueId,
       path: '/sign-in',
     });
-  }
-
-  console.log('Device Unique ID:', uniqueId);
-
+  } 
   // Retrieve client IP address using x-forwarded-for header or similar
   const clientIpAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip');
   const ip = clientIpAddress || 'unknown';
@@ -37,8 +37,8 @@ export default async function rateLimit(req: NextRequest) {
       requestCounts.delete(key);
     }
   }
-
-  const requestData = requestCounts.get(uniqueId);
+  let uniqueId = response.cookies.get('uniqueId')!.value
+  const requestData = requestCounts.get(uniqueId as string);
 
   if (requestData) {
     // Check if the IP address matches

@@ -4,8 +4,7 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIpAddress } from '@/lib/helpers/getIp';
-import rateLimit from '@/lib/helpers/rate-limit-test';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
@@ -21,24 +20,14 @@ export async function POST(req: NextRequest) {
     // if (!ip) {
     //   return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
     // }
-    try {
-      const myLimitTest = await rateLimit(req);
-      console.log('ipRequestCounts', myLimitTest?.requestCounts)
-      if (myLimitTest?.error) {
-        return NextResponse.json({ error: myLimitTest.error }, { status: 429 });
-      }
-      console.log(myLimitTest.uniqueId?.toString());
-    } catch (error) {
-      console.error('Rate limit exceeded:', error);
-      return NextResponse.json({ error: 'Rate limit exceeded:' }, { status: 429 });
+   
+    const ipAddress = await getIpAddress();
+    if (!ipAddress.success) {
+      return NextResponse.json(
+        { error: 'Your requesting too much, please try again a couple of minutes.' },
+        { status: 429 }
+      );
     }
-    // const ipAddress = await getIpAddress();
-    // if (!ipAddress.success) {
-    //   return NextResponse.json(
-    //     { error: 'Your requesting too much, please try again a couple of minutes.' },
-    //     { status: 429 }
-    //   );
-    // }
     const body = await req.json();
     const validatedFields = SigninValidator.safeParse(body);
 
@@ -84,3 +73,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }
+function rateLimit(req: NextRequest) {
+  throw new Error('Function not implemented.');
+}
+

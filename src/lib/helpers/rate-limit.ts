@@ -10,7 +10,7 @@ export const redis = new Redis({
 // Create a new ratelimiter, that allows 5 requests per 5 seconds
 export const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(10, "5 m"),
+  limiter: Ratelimit.slidingWindow(3, "5 m"),
   analytics: true,
   timeout: 1000
 });
