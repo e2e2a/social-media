@@ -1,53 +1,63 @@
-"use server";
+'use server';
 
-type IPRequestCounts = Map<string, { count: number; expirationTime: number }>;
-const ipRequestCounts: IPRequestCounts = new Map();
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { v4 as uuidv4 } from 'uuid';
 
-const maxRequestsPerIP = 3;
+type RequestCounts = Map<string, { ip: string; count: number; expirationTime: number }>;
+const requestCounts: RequestCounts = new Map();
+
+const maxRequestsPerDevice = 3;
 const expirationTimeMs = 60 * 1000; // 1 minute
 
-export default async function rateLimit(headers: Headers) {
-  const ip = getClientIP(headers);
-  if (!ip) {
-    throw new Error('IP address not found in headers.');
+export default async function rateLimit(req: NextRequest) {
+  const cookieStore = cookies();
+  let uniqueId = cookieStore.get('uniqueId')?.value;
+
+  if (!uniqueId) {
+    uniqueId = uuidv4(); // Generate a new UUID if not found in cookies
+    NextResponse.next().cookies.set({
+      name: 'uniqueId',
+      value: uniqueId,
+      path: '/sign-in',
+    });
   }
 
-  console.log('User IP:', ip);
+  console.log('Device Unique ID:', uniqueId);
+
+  // Retrieve client IP address using x-forwarded-for header or similar
+  const clientIpAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip');
+  const ip = clientIpAddress || 'unknown';
 
   const currentTime = Date.now();
 
-  // Clean up expired IP entries
-  for (const [key, value] of ipRequestCounts.entries()) {
+  // Clean up expired entries
+  for (const [key, value] of requestCounts.entries()) {
     if (value.expirationTime <= currentTime) {
-      ipRequestCounts.delete(key);
+      requestCounts.delete(key);
     }
   }
 
-  const ipData = ipRequestCounts.get(ip);
+  const requestData = requestCounts.get(uniqueId);
 
-  if (ipData) {
-    if (ipData.count >= maxRequestsPerIP) {
+  if (requestData) {
+    // Check if the IP address matches
+    if (requestData.ip !== ip) {
+      return { error: 'IP address mismatch. Try again later.' };
+    }
+
+    if (requestData.count >= maxRequestsPerDevice) {
       return { error: 'Too many requests. Try again later.' };
     }
-    ipData.count++;
+    requestData.count++;
   } else {
-    ipRequestCounts.set(ip, { count: 1, expirationTime: currentTime + expirationTimeMs });
+    requestCounts.set(uniqueId, { ip: ip, count: 1, expirationTime: currentTime + expirationTimeMs });
 
-    // Set a timeout to clean up the IP entry
+    // Set a timeout to clean up the entry
     setTimeout(() => {
-      ipRequestCounts.delete(ip);
+      requestCounts.delete(uniqueId);
     }, expirationTimeMs);
   }
 
-  return { ip, ipRequestCounts };
-}
-
-function getClientIP(headers: Headers): string | null {
-  const forwardedFor = headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    // x-forwarded-for can return a comma-separated list of IPs, take the first one
-    return forwardedFor.split(',')[0].trim();
-  }
-  // Fallback to remote address or any other logic you need to obtain the IP
-  return headers.get('remote-addr') || null;
+  return { uniqueId, requestCounts };
 }
