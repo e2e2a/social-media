@@ -30,6 +30,9 @@ model User {
   accounts      Account[]
   password      String?
   post          Post[]
+  activeIpAddress String
+  recentIpAddress  String
+  activation Boolean
   role          UserRole  @default(USER)
 
   createdAt DateTime @default(now())
@@ -90,17 +93,19 @@ model VerificationToken {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@unique([email, token, code])
 }
 
 model ResetPassword {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  email       String   @unique
-  token       String   @unique
-  expires     DateTime
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String   @unique
+  token   String   @unique
+  expires DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@unique([email, token])
 }
 
@@ -109,3 +114,27 @@ model Attempt {
   ipAddress String
   timestamp DateTime @default(now())
 }
+
+// # soon @todo try login by ipbased
+// model UserIp {
+//   id               String @id @default(auto()) @map("_id") @db.ObjectId
+//   userId           String @db.ObjectId
+//   relatedIpId      String @db.ObjectId
+//   currentIpAddress String
+//   recentIpAddress  String
+//   relatedIp RelatedIp[]
+
+//   user      User        @relation(fields: [userId], references: [id])
+//   createdAt DateTime    @default(now())
+//   updatedAt DateTime    @updatedAt
+// }
+
+// model RelatedIp {
+//   id        String @id @default(auto()) @map("_id") @db.ObjectId
+//   ipAddress String
+//   userIpId  String @db.ObjectId
+
+//   UserIp    UserIp   @relation(fields: [userIpId], references: [id])
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }

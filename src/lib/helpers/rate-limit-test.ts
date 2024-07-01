@@ -27,7 +27,7 @@ export default async function rateLimit(limit: number = 3) {
     tracker.expiresAt = currentTime + expirationTimeMs;
   }
   tracker.count++;
-  if (tracker.count > limit) {
+  if (tracker.count > maxRequestsPerDevice) {
     throw new Error('Rate Limit exceeded.');
   }
 }

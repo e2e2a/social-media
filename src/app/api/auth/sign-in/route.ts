@@ -13,25 +13,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const headersList = headers();
-    const resp= NextResponse.next()
-    const uniqueId  = resp.headers.get('uniqueId');
-    const forwardedFor  = headersList.get('x-forwarded-for');
-    const ipAddress = forwardedFor?.split(',')[0].trim() ?? "Unknown";
-
-    // console.log('Headers:', headersList);
-    // console.log('uniqueId:', uniqueId);
-    // console.log('ipAddress:', ipAddress);
-    
     try {
       const myLimit = await rateLimit().then((res) => {
         console.log('Limit:', res);
       })
     } catch (error) {
-      return NextResponse.json({ error: 'Rate Limit exceeded.' }, { status: 429 });
+      return NextResponse.json({ error: 'Rate Limit exceeded.', limit: true }, { status: 429 });
     }
     
-   
     // const ipAddress = await getIpAddress();
     // if (!ipAddress.success) {
     //   return NextResponse.json(
