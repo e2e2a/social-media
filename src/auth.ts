@@ -19,15 +19,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    async signIn({user,account}){
-      if(account?.provider !== 'creadentials') return true;
-      const existUser = await getUserById(user.id as string);
-      // prevent signin without email verification
-      if(!existUser || !existUser?.emailVerified) return false;
-      /**
-       * @Todo add 2FA check
-       */
-      return true;
+    async signIn({ user, account }) {
+      try {
+        if (account?.provider !== 'credentials') return true;
+        const existUser = await getUserById(user.id as string);
+        // prevent signin without email verification
+        if (!existUser || !existUser?.emailVerified) return false;
+        /**
+         * @Todo add 2FA check
+         */
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
 
     async jwt({ token, user }) {

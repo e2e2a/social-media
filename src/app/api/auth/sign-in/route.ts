@@ -3,9 +3,12 @@ import { getUserByEmail } from '@/services/user';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { getIpAddress } from '@/lib/helpers/getIp';
-import { headers } from 'next/headers';
-import rateLimit from '@/lib/helpers/rate-limit-test';
+import rateLimit from '@/lib/helpers/rate-limit';
+import { comparePassword } from '@/lib/helpers/bcrypt';
+import { checkingIp } from '@/lib/helpers/checkingIp';
+import { generateVerificationToken } from '@/lib/helpers/tokens';
+import { cookies } from 'next/headers';
+import { generateRandomString } from '@/lib/helpers/verificationCode';
 
 export async function POST(req: NextRequest) {
   if (req.method !== 'POST') {
@@ -13,14 +16,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    try {
-      const myLimit = await rateLimit().then((res) => {
-        console.log('Limit:', res);
-      })
-    } catch (error) {
-      return NextResponse.json({ error: 'Rate Limit exceeded.', limit: true }, { status: 429 });
-    }
-    
     // const ipAddress = await getIpAddress();
     // if (!ipAddress.success) {
     //   return NextResponse.json(
@@ -38,15 +33,36 @@ export async function POST(req: NextRequest) {
     const { email, password } = validatedFields.data;
 
     const existingUser = await getUserByEmail(email);
-
+    try {
+      const myLimit = await rateLimit(6, email);
+    } catch (error) {
+      return NextResponse.json({ error: 'Rate Limit exceeded.', limit: true }, { status: 429 });
+    }
     if (!existingUser || !existingUser.email || !existingUser.password) {
-      return NextResponse.json({ error: 'Email does not exist!' }, { status: 400 });
+      return NextResponse.json({ error: 'Incorrect email or password.' }, { status: 403 });
     }
 
-    if (!existingUser.emailVerified) {
-      return NextResponse.json({ error: 'Email not found.' }, { status: 403 });
-    }
+    if (!existingUser.emailVerified) return NextResponse.json({ error: 'Incorrect email or password.' }, { status: 403 });
 
+    const isMatch = await comparePassword(password, existingUser.password as string);
+
+    if (!isMatch) return NextResponse.json({ error: 'Incorrect email or password.' }, { status: 403 });
+
+    /**
+     * @todo
+     * we need to bring the user to verification code if the ip is new
+     * 1. create the type of token to use
+     * 2. check the type of token to query
+     * else direct to home page
+     */
+
+    const userIp = await checkingIp(existingUser);
+    if (!userIp || userIp.error) {
+      console.log(userIp.error);
+      const tokenType = 'Activation';
+      const verificationToken = await generateVerificationToken(email, tokenType);
+      return NextResponse.json({ token: verificationToken.token }, { status: 203 });
+    }
     try {
       await signIn('credentials', {
         email,
@@ -59,19 +75,15 @@ export async function POST(req: NextRequest) {
       if (error instanceof AuthError) {
         switch (error.type) {
           case 'CredentialsSignin':
-            return NextResponse.json({ error: 'Password not match!' }, { status: 401 });
-          case 'AccessDenied':
-            return NextResponse.json({ error: 'Access denied!' }, { status: 403 });
+            return NextResponse.json({ error: 'Invalid Credentials.' }, { status: 401 });
           default:
             return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
         }
       }
-      throw error;
+      return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
     }
   } catch (error) {
     console.error('Error processing request:', error);
-    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
   }
 }
-
-

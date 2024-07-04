@@ -151,6 +151,17 @@ export const updateUserEmailVerifiedById = async (id: string) => {
   });
 };
 
+export const updateUserIpById = async (id: string, ip: string) => {
+  const user = await getUserById(id)
+  await db.user.update({
+    where: { id: id },
+    data: {
+      activeIpAddress: ip,
+      recentIpAddress: user?.activeIpAddress,
+    },
+  });
+};
+
 export const updateUserPasswordById = async (data: IUpdateUserPassword) => {
   try {
     const { id, password } = data;

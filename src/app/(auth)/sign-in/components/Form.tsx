@@ -34,8 +34,11 @@ const SignInForm = () => {
       setIsPending(true);
       mutation.mutate(data, {
         onSuccess: (res) => {
-          console.log(res);
-          router.push('/');
+          if(!res.token){
+            return router.push('/');
+            
+          }
+          return router.push(`/verification?token=${res.token}`);
         },
         onError: (error) => {
           setMessage(error.message);

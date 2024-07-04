@@ -1,12 +1,17 @@
 'use client';
-import { auth, signOut } from '@/auth';
-import { Button } from '@/components/ui/button';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Users from './components/users';
 import LogoutComponents from './components/logout';
-
+import { getSession, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+async function myFunction() {
+  const session = await getSession();
+  /* ... */
+  return session;
+}
 const SettingsPage = () => {
-  const [users, setUsers] = useState([]);
+  const session = myFunction();
+  const router = useRouter();
   // const session = await auth();
   // const users = await getUsers()
   // const fetchData = async () => {
@@ -34,7 +39,6 @@ const SettingsPage = () => {
   //   }
   // };
   // useEffect(() => {
-    
 
   //   fetchData().then((data) => {
   //     console.log(data)
@@ -43,10 +47,15 @@ const SettingsPage = () => {
   //     console.error('Error fetching data:', error);
   //   }); // Call fetchData function when the component mounts
   // }, []); // Empty dependency array means this effect runs only once after initial render
-
+  if (!session) {
+    return router.push('/mypushrouter');
+  }
+  session.then((data) => {
+    console.log('data', data)
+  })
   return (
     <div>
-      <Users/>
+      <Users />
       {/* {users &&
         users.map((user: any) => (
           <div key={user.id}>

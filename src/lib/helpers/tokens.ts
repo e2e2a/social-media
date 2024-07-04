@@ -1,25 +1,17 @@
-"use server"
-import { getVerificationTokenByEmail } from '@/services/verification-token';
+'use server';
+import { deleteVerificationTokenByid, getVerificationTokenByEmail } from '@/services/verification-token';
 import jwt from 'jsonwebtoken';
 import db from '../db';
 import { generateRandomString } from './verificationCode';
-import { getResetPasswordTokenByEmail } from '@/services/reset-password';
+import { deleteResetPasswordTokenById, getResetPasswordTokenByEmail } from '@/services/reset-password';
 
 export const generateVerificationToken = async (email: string, TokenType: string) => {
   const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours in milliseconds
-  const token = jwt.sign(
-    { email, exp: expirationTime.getTime() },
-    process.env.JWT_SECRET!,
-    { algorithm: 'HS256' }
-  );
+  const token = jwt.sign({ email, exp: expirationTime.getTime() }, process.env.JWT_SECRET!, { algorithm: 'HS256' });
 
   const existingToken = await getVerificationTokenByEmail(email);
   if (existingToken) {
-    await db.verificationToken.delete({
-      where: {
-        id: existingToken.id,
-      },
-    });
+    deleteVerificationTokenByid(existingToken.id);
   }
 
   const activitionCode = await generateRandomString();
@@ -40,19 +32,11 @@ export const generateVerificationToken = async (email: string, TokenType: string
 
 export const generateResetPasswordToken = async (email: string) => {
   const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours in milliseconds
-  const token = jwt.sign(
-    { email, exp: expirationTime.getTime() },
-    process.env.JWT_SECRET!,
-    { algorithm: 'HS256' }
-  );
+  const token = jwt.sign({ email, exp: expirationTime.getTime() }, process.env.JWT_SECRET!, { algorithm: 'HS256' });
 
   const existingToken = await getResetPasswordTokenByEmail(email);
   if (existingToken) {
-    await db.resetPassword.delete({
-      where: {
-        id: existingToken.id,
-      },
-    });
+    deleteResetPasswordTokenById(existingToken.id)
   }
 
   const verificationToken = await db.resetPassword.create({
@@ -74,11 +58,11 @@ export const generateVerificationCode = async (email: string) => {
   const expireCode = new Date(new Date().getTime() + 5 * 60 * 1000);
 
   const verificationToken = await db.verificationToken.update({
-    where: {id: existingToken.id},
+    where: { id: existingToken.id },
     data: {
       code: activitionCode,
       expiresCode: expireCode,
     },
   });
   return verificationToken;
-}
+};

@@ -19,21 +19,21 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  image         String?
-  firstname     String
-  lastname      String
-  username      String?   @unique
-  bio           String?
-  email         String?   @unique
-  emailVerified DateTime?
-  accounts      Account[]
-  password      String?
-  post          Post[]
-  activeIpAddress String
-  recentIpAddress  String
-  activation Boolean
-  role          UserRole  @default(USER)
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  image           String?
+  firstname       String
+  lastname        String
+  username        String?   @unique
+  bio             String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  accounts        Account[]
+  password        String?
+  post            Post[]
+  activeIpAddress String?
+  recentIpAddress String?
+  activation      Boolean   @default(false)
+  role            UserRole  @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

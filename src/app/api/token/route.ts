@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     if (!existingToken) {
       return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
-    
+
     const existingUser = await getUserByEmail(existingToken.email);
 
     // // Handle different verification types
@@ -41,22 +41,17 @@ export async function POST(req: NextRequest) {
     //     break;
     // }
     switch (existingToken.tokenType) {
+      case 'Activation':
       case 'Recovery':
-        console.log('Recovery')
+        console.log(existingToken.tokenType);
         if (!existingUser || !existingUser.emailVerified) {
-          return NextResponse.json(
-            { error: 'User email is not verified. Redirecting to recovery page...' },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: 'User email is not verified. Redirecting to recovery page...' }, { status: 400 });
         }
         break;
       case 'Verify':
-        console.log('Verify')
+        console.log('Verify');
         if (!existingUser) {
-          return NextResponse.json(
-            { error: 'User not found.' },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: 'User not found.' }, { status: 400 });
         }
     }
 
@@ -67,7 +62,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ existingToken: existingToken }, { status: 200 });
   } catch (error: any) {
-    
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

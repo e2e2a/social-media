@@ -1,9 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { SigninValidator } from './lib/validators/Validator';
 import { getUserByEmail } from './services/user';
-import { comparePassword } from './lib/helpers/bcrypt';
 import GoogleProvider from 'next-auth/providers/google';
+
 export default {
   providers: [
     GoogleProvider({
@@ -21,18 +20,19 @@ export default {
     }),
     Credentials({
       async authorize(credentials) {
-        const validatedFields = SigninValidator.safeParse(credentials);
-        if (validatedFields.success) {
-          const { email, password } = validatedFields.data;
-          const user = await getUserByEmail(email);
+        // const validatedFields = SigninValidator.safeParse(credentials);
+        // if (validatedFields.success) {
+        //   const { email, password } = validatedFields.data;
+        const user = await getUserByEmail(credentials.email as string);
 
-          if (!user) return null;
-          if (!user.password) return null;
-          const isMatch = await comparePassword(password, user.password as string);
+        if (!user) return null;
+        // if (!user.password) return null;
+        // const isMatch = await comparePassword(password, user.password as string);
 
-          if (isMatch) return user;
-        }
-        return null;
+        // if (isMatch) return user;
+        return user;
+        // }
+        // return null;
       },
     }),
   ],

@@ -36,7 +36,7 @@ export const useSignUpMutation = () => {
 };
 
 export const useSignInMutation = () => {
-  return useMutation<{ error: string }, Error, z.infer<typeof SigninValidator>>({
+  return useMutation<{ error: string, token?: string }, Error, z.infer<typeof SigninValidator>>({
     mutationFn: fetchSignIn,
   });
 };

@@ -43,7 +43,6 @@ const VerificationForm = () => {
   const mutationResend = useResendVCodeMutation();
   const router = useRouter();
 
-
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const { data: result, error } = useTokenCheckQuery({ token });
@@ -61,12 +60,16 @@ const VerificationForm = () => {
     checkToken();
   }, [checkToken]);
 
-
   useEffect(() => {
-    if (result ) {
+    if (result) {
       setHeader('Confirming your verification code');
       setLoading(false);
-      if (result.existingToken && result.existingToken.email && result.existingToken.expiresCode && result.existingToken.tokenType) {
+      if (
+        result.existingToken &&
+        result.existingToken.email &&
+        result.existingToken.expiresCode &&
+        result.existingToken.tokenType
+      ) {
         setTokenEmail(result.existingToken.email);
         setExpirationTime(new Date(result.existingToken.expiresCode));
       }
@@ -142,17 +145,17 @@ const VerificationForm = () => {
         const data = {
           email: tokenEmail,
           verificationCode: verificationCode,
-          Ttype: result?.existingToken.tokenType
+          Ttype: result?.existingToken.tokenType,
         };
         setLabelLink('');
         mutationSubmit.mutate(data, {
           onSuccess: (res) => {
             setMessage('Verification completed!');
             setTypeMessage('success');
-            if(!res.token){
-             router.push('/sign-in');
-             return;
-            } else{
+            if (!res.token) {
+              router.push('/sign-in');
+              return;
+            } else {
               router.push(`/recovery/reset-password?token=${res.token.token}`);
               return;
             }
