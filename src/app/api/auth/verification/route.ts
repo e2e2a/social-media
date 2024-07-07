@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { deleteVerificationTokenByid, getVerificationTokenByEmail } from '@/services/verification-token';
 import { generateResetPasswordToken } from '@/lib/helpers/tokens';
 import { signIn } from '@/auth';
-import { AuthError } from 'next-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,15 +29,15 @@ export async function POST(req: NextRequest) {
         const RPtoken = await generateResetPasswordToken(email);
         await deleteVerificationTokenByid(userToken.id);
         return NextResponse.json({ token: RPtoken }, { status: 201 });
-        
+
       case 'Activation':
         await deleteVerificationTokenByid(userToken.id);
-          await signIn('credentials', {
-            email: user.email,
-            redirect: false,
-          });
-    
-          return NextResponse.json({ message: 'Login successful' }, { status: 201 });
+        await signIn('credentials', {
+          email: user.email,
+          redirect: false,
+        });
+
+        return NextResponse.json({ message: 'Login successful' }, { status: 201 });
       case 'Verify':
         await updateUserEmailVerifiedById(user.id);
         await deleteVerificationTokenByid(userToken.id);

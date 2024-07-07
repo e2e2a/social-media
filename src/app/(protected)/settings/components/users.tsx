@@ -1,10 +1,11 @@
 "use client"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 
-const Users = () => {
+const Users = (session:any) => {
+  // const { data: session } = useSession();
+  console.log(session);
   const fetchData = async () => {
-    try {
       const response = await fetch('/api/users', {
         method: 'GET',
         headers: {
@@ -16,15 +17,12 @@ const Users = () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      return data; // Assuming your API response is an array of users
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      throw new Error('Failed to fetch users');
-    }
+      return data;
+  
   };
   const { data, error, isLoading }: UseQueryResult<any, Error> = useQuery({
-    queryKey: ['users'], // Specify a unique key for this query
-    queryFn: fetchData, // Pass fetchData directly as the function to execute for fetching data
+    queryKey: ['users'], 
+    queryFn: fetchData,
     // staleTime: 0,
     // refetchInterval: 5 * 1000,
   });
@@ -41,6 +39,9 @@ const Users = () => {
           <p>{user.email}</p>
         </div>
       ))}
+      <div >
+          <p>this is {session?.session.email}</p>
+        </div>
     </div>
   );
 };

@@ -1,12 +1,13 @@
 // Import statements
+"use client"
 import React from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 
 const LogoutComponents = () => {
   const handleLogout = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
-      await signOut({ callbackUrl: '/' }); // Redirect after sign out
+      await signOut({ callbackUrl: '/sign-in' }); 
     }
 
   return (
